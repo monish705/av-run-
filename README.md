@@ -1,69 +1,107 @@
-# 🦾 Unitree G1 Embodied AI: Auto-Discovery Control Pipeline
+# Embodied AI and AV Simulation Workspace
 
-![Status](https://img.shields.io/badge/Status-Prototype-orange)
-![Python](https://img.shields.io/badge/Python-3.11+-blue)
-![Sim](https://img.shields.io/badge/MuJoCo-3.1.2-red)
-![FastAPI](https://img.shields.io/badge/FastAPI-Server-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+This repository is a working workspace for two related tracks:
 
-A cutting-edge, end-to-end embodied AI architecture for the Unitree G1 humanoid robot. This project demonstrates a state-of-the-art hierarchical control pipeline: translating high-level natural language semantic goals into dynamic waypoint routing, while a local solver executes real-time obstacle avoidance.
+- humanoid embodied AI experiments around the Unitree G1 stack
+- autonomous vehicle simulation and evaluation runbooks, including CARLA
 
-## Additional Runbooks
+It is not a polished single-product repository yet. It contains runnable code, stack notes, experiments, artifacts, and setup documentation that support ongoing system development.
 
-For simulation and AV setup notes, start here:
+## What Is Here
 
-* [Docs index](docs/README.md)
-* [CARLA 0.9.16 working stack](docs/carla_working_stack.md)
+### Humanoid stack
 
-## 🧠 System Hierarchy
+The original core of this workspace is a Unitree G1 embodied AI pipeline built around:
 
-The system is built on a decoupled hierarchy prioritizing asynchronous execution:
+- a headless simulation server
+- a VLM-driven high-level navigator
+- local low-level locomotion and control modules
+- perception and world-model experiments
 
-1.  **Macro-Planner (VLM Orchestrator):** `vlm_navigator.py` queries endpoints to fetch the robot's Ego-centric Head Camera. If a massive obstacle blocks the path, the VLM dynamically replans and issues global `walk_to_waypoint()` commands.
-2.  **Telemetry Micro-Server:** `server.py` hosts a headless FastAPI instance exposing robot actions. It manages command queueing so the intensive physics solver never blocks during API latency. 
-3.  **Local Navigator (APF Field):** `motor/locomotion.py` utilizes an Artificial Potential Field to slide around walls, creep past corners, and execute stall-recovery maneuvers (all without crashing the robot).
-4.  **Balance Engine (RL Policy):** An ONNX-exported neural network policy running at 50Hz that queries the `UnitreeBridge` to compute raw joint torques natively in MuJoCo to keep the G1 stable and walking.
+Main files for that path:
 
-## 🚀 Getting Started
+- `server.py`
+- `vlm_navigator.py`
+- `motor/`
+- `perception/`
+- `world_model/`
+- `sim/`
 
-### Prerequisites
+### AV simulation track
 
-*   Python 3.11+
-*   FastAPI & Uvicorn
-*   MuJoCo 3.1.2+
-*   Groq API Key (for LLaMA Vision)
+This workspace also contains AV architecture notes and CARLA setup work used to stand up a reproducible remote simulator stack for end-to-end route execution and evaluation.
 
-### Installation
+Main files for that path:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/unitree-embodied-ai.git
-   cd unitree_embodied_ai
-   ```
+- `architecture.md`
+- `docs/`
+- `sim/carla_recorded_agent_run.py`
+- `artifacts/carla/`
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Recommended Starting Points
 
-### Running the VLM E2E Simulation
+- [Docs index](docs/README.md)
+- [CARLA working stack](docs/carla_working_stack.md)
+- [AV complete stack](docs/av_complete_stack.md)
+- [AV driving stack](docs/av_driving_stack.md)
+- [Truck AV 2026 direction](docs/truck_av_2026_direction.md)
 
-1. **Boot the Headless Physics Server:**
-   ```bash
-   python server.py
-   ```
-   *The Unitree G1 will spawn and balance infinitely in real-time.*
+## Current CARLA Status
 
-2. **Engage the VLM Cognitive Loop:**
-   In a separate terminal, launch the brain:
-   ```bash
-   python vlm_navigator.py
-   ```
-   *The VLM will map the obstacle course and begin issuing routing commands.*
+A working CARLA stack was brought up on a remote GPU VM using:
 
-## 🎥 Core Capabilities
-*   **Decoupled Rate Limiting:** The robot won't collapse if the LLM API hits a rate limit; the background server autonomously continues balancing. 
-*   **Dynamic Evasion:** The macroscopic VLM works in tandem with the microscopic APF navigation to flawlessly route around geometry snags.
+- `CARLA 0.9.16`
+- `Ubuntu 22.04`
+- `RTX A4000`
+- matching `Python 3.10` CARLA client API
+- official Docker runtime in headless mode
 
-## 📄 License
+The exact reproducible setup, commands, compatibility notes, and artifact paths are documented here:
+
+- [CARLA 0.9.16 working stack](docs/carla_working_stack.md)
+
+## Humanoid Quick Start
+
+If you are working on the Unitree humanoid path, the current entry flow is:
+
+1. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Start the simulation server:
+
+```bash
+python server.py
+```
+
+3. In a separate terminal, start the VLM loop:
+
+```bash
+python vlm_navigator.py
+```
+
+This is still an experimental stack, so expect iteration rather than a one-command production setup.
+
+## Repository Shape
+
+High-signal directories:
+
+- `docs/` runbooks, plans, architecture notes
+- `motor/` locomotion and control logic
+- `perception/` perception-related code
+- `sim/` simulation utilities and scripts
+- `tests/` test code
+- `artifacts/` generated outputs, videos, and run results
+- `notebooks/` exploratory analysis
+
+## Notes
+
+- The repository mixes experiments, prototype infrastructure, and documentation.
+- Some docs reflect future direction rather than already-productized components.
+- For anything CARLA-related, prefer the docs in `docs/` over older ad hoc scripts.
+
+## License
+
 MIT License
